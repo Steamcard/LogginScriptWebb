@@ -1,5 +1,5 @@
 const express = require("express");
-
+const bcrypt = require("bcryptjs");
 const app = express();
 
 app.use(express.urlencoded({extended:false}));
@@ -15,7 +15,40 @@ app.get("/login",function(req,res){
 
 app.post("/login",function(req,res){
 
-    res.send(req.body);
+    //Hämta våra användare från db/fil
+    const users = require("./users");
+
+    const user = users.filter(function(u){
+
+        if(req.body.email === u.email)
+        {
+            return true;
+        }
+
+    });
+
+    // Om Vi har en och exakt en användare med rätt email
+    if(user.length === 1)
+    {
+        //Kolla lösenord
+        bcrypt.compare(req.body.password, user[0].password,function(err,success){
+
+            if(success)
+            {
+                res.send("Login Lyckad!");
+            }
+            else
+            {
+                res.send("Fel Lössenord");
+            }
+
+        });
+
+    }
+    else
+    {
+        res.send("Ingen sådan användare");
+    }
 
     /**
      * 1. hämta data som klienten skickat ( Repetition )
