@@ -1,12 +1,18 @@
+
+const jwt = require("jsonwebtoken");
+const cookieParser = require("cookie-parser");
 const express = require("express");
 const bcrypt = require("bcryptjs");
+const secret = require("./secret");
+
 const app = express();
 
 app.use(express.urlencoded({extended:false}));
+app.use(cookieParser());
 
 
 app.get("/",function(req,res){
-    res.send("index route...");
+    res.send(req.cookies);
 });
 
 app.get("/login",function(req,res){
@@ -35,6 +41,11 @@ app.post("/login",function(req,res){
 
             if(success)
             {
+              //  res.cookie("auth",true,{httpOnly:true,sameSite:"strict"});
+
+
+                const token = jwt.sign({email:user[0].email}, secret,{expiresIn:60});
+                res.cookie("token",token,{httpOnly:true,sameSite:"strict"});
                 res.send("Login Lyckad!");
             }
             else
