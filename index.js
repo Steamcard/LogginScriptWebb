@@ -15,7 +15,24 @@ app.get("/",function(req,res){
     res.send(req.cookies);
 });
 
+const auth = require("./auth");
+
+//auth verifierar om man är inloggad eller inte | auth är ett middleware (har tillgång till request, respond och next)
+app.get("/secret",auth,function(req,res){
+    res.send(req.cookies);
+});
+
+app.get("/logout", function(req,res){
+
+    res.cookie("token", "snart är det jul");
+    res.redirect("/secret");
+
+})
+
+
+
 app.get("/login",function(req,res){
+    //skickar html text filen
     res.sendFile(__dirname+"/loginform.html");
 });
 
@@ -26,6 +43,7 @@ app.post("/login",function(req,res){
 
     const user = users.filter(function(u){
 
+        //filtrerar och kollar om mailen är identiska
         if(req.body.email === u.email)
         {
             return true;
@@ -43,8 +61,9 @@ app.post("/login",function(req,res){
             {
               //  res.cookie("auth",true,{httpOnly:true,sameSite:"strict"});
 
-
+                //snabbt ge en användare acces till en server
                 const token = jwt.sign({email:user[0].email}, secret,{expiresIn:60});
+                //cookies skickar data utan clienten märker ochså väldigt säkert då man kan ej ändra det.
                 res.cookie("token",token,{httpOnly:true,sameSite:"strict"});
                 res.send("Login Lyckad!");
             }
