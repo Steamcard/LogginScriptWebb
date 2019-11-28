@@ -4,81 +4,40 @@ const cookieParser = require("cookie-parser");
 const express = require("express");
 const bcrypt = require("bcryptjs");
 const secret = require("./secret");
-
+const login = require("./login");
+const auth = require("./auth");
 const app = express();
 
 app.use(express.urlencoded({extended:false}));
 app.use(cookieParser());
 
-
 app.get("/",function(req,res){
     res.send(req.cookies);
 });
 
-const auth = require("./auth");
+
+app.post("/login",login,function(req,res)
+{
+    //all logik i middelware | om du blir inloggad hamnar man i /secret
+});
+
+
+app.get("/login",function(req,res){
+    res.sendFile(__dirname +"/loginform.html");
+});
+
 
 //auth verifierar om man är inloggad eller inte | auth är ett middleware (har tillgång till request, respond och next)
 app.get("/secret",auth,function(req,res){
     res.send(req.cookies);
 });
 
-app.get("/logout", function(req,res){
 
+app.get("/logout", function(req,res){
     res.cookie("token", "snart är det jul");
     res.redirect("/secret");
-
-})
-
-
-
-app.get("/login",function(req,res){
-    //skickar html text filen
-    res.sendFile(__dirname+"/loginform.html");
 });
 
-app.post("/login",function(req,res){
-
-    //Hämta våra användare från db/fil
-    const users = require("./users");
-
-    const user = users.filter(function(u){
-
-        //filtrerar och kollar om mailen är identiska
-        if(req.body.email === u.email)
-        {
-            return true;
-        }
-
-    });
-
-    // Om Vi har en och exakt en användare med rätt email
-    if(user.length === 1)
-    {
-        //Kolla lösenord
-        bcrypt.compare(req.body.password, user[0].password,function(err,success){
-
-            if(success)
-            {
-              //  res.cookie("auth",true,{httpOnly:true,sameSite:"strict"});
-
-                //snabbt ge en användare acces till en server
-                const token = jwt.sign({email:user[0].email}, secret,{expiresIn:60});
-                //cookies skickar data utan clienten märker ochså väldigt säkert då man kan ej ändra det.
-                res.cookie("token",token,{httpOnly:true,sameSite:"strict"});
-                res.send("Login Lyckad!");
-            }
-            else
-            {
-                res.send("Fel Lössenord");
-            }
-
-        });
-
-    }
-    else
-    {
-        res.send("Ingen sådan användare");
-    }
 
     /**
      * 1. hämta data som klienten skickat ( Repetition )
@@ -95,7 +54,6 @@ app.post("/login",function(req,res){
      * 9. Småfix för att förbättra säkerhet och fixa utloggning. 
      */
 
-});
 
 // kollar om systemet har en angiven port, annars 3700...
 const port = process.env.PORT || 3700
